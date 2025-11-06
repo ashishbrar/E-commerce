@@ -8,7 +8,8 @@ use App\Models\Order;
 use App\Models\Cart;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\Auth;
-use App\Models\PaymentSetting;
+use App\Models\PaypalCredential;
+
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
 class PayPalController extends Controller
@@ -57,7 +58,7 @@ class PayPalController extends Controller
 
         $totalValue = number_format($total, 2, '.', '');
 
-        $settings = PaymentSetting::first();
+        $settings = PaypalCredential::first();
 
         $provider = new PayPalClient;
 

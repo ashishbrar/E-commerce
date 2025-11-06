@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Models\PaymentSetting; 
+use App\Models\PaypalCredential;
 use Illuminate\Support\ServiceProvider;
 
 class PayPalConfigServiceProvider extends ServiceProvider
@@ -12,35 +12,41 @@ class PayPalConfigServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-
+        //
     }
+
+    /**
+     * Bootstrap services.
+     */
     public function boot(): void
     {
-        $settings = PaymentSetting::first();
-            if ($settings) {
-                config([
-                    'paypal' => [
-                        'mode'    => $settings->sandbox == 1 ? 'sandbox' : 'live',
+        // Fetch PayPal credentials from the database
+        $settings = PaypalCredential::first();
 
-                        'sandbox' => [
-                            'client_id'     => $settings->paypal_client_id,
-                            'client_secret' => $settings->paypal_secret,
-                            'app_id'        => 'APP-80W284485P519543T',
-                        ],
+        if ($settings) {
+            config([
+                'paypal' => [
+                    'mode' => $settings->sandbox == 1 ? 'sandbox' : 'live',
 
-                        'live' => [
-                            'client_id'     => $settings->paypal_client_id,
-                            'client_secret' => $settings->paypal_secret,
-                            'app_id'        => '',
-                        ],
+                    'sandbox' => [
+                        'client_id'     => $settings->paypal_client_id,
+                        'client_secret' => $settings->paypal_secret,
+                        'app_id'        => 'APP-80W284485P519543T', 
+                    ],
 
-                        'payment_action' => 'Sale',
-                        'currency'       => 'USD',
-                        'notify_url'     => '',
-                        'locale'         => 'en_US',
-                        'validate_ssl'   => true,
-                    ]
-                ]);
-            }
+                    'live' => [
+                        'client_id'     => $settings->paypal_client_id,
+                        'client_secret' => $settings->paypal_secret,
+                        'app_id'        => '', 
+                    ],
+
+                    'payment_action' => 'Sale',
+                    'currency'       => 'USD',
+                    'notify_url'     => '',  
+                    'locale'         => 'en_US',
+                    'validate_ssl'   => true,
+                ],
+            ]);
+        }
     }
 }
