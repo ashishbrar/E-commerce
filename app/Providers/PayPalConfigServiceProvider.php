@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\PaypalCredential;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class PayPalConfigServiceProvider extends ServiceProvider
@@ -20,7 +21,7 @@ class PayPalConfigServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Fetch PayPal credentials from the database
+        if(Schema::hasTable('paypal_credentials')){
         $settings = PaypalCredential::first();
 
         if ($settings) {
@@ -48,5 +49,6 @@ class PayPalConfigServiceProvider extends ServiceProvider
                 ],
             ]);
         }
+    }
     }
 }
