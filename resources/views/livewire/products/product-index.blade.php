@@ -1,13 +1,23 @@
 <div class="container mt-4">
+    <div class="d-flex justify-content-end mb-4">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="paypalModeSwitch">
+            <label class="form-check-label fw-semibold ms-2" for="paypalModeSwitch">
+                Switch to Live PayPal Mode
+            </label>
+        </div>
+    </div>
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
             <h1 class="h3">{{ __('Products') }}</h1>
             <p class="text-muted mb-0">{{ __('Manage all your products') }}</p>
         </div>
+
+
         @can('Product Add')
-            <a href="{{ route('products.create') }}" class="btn btn-primary">
-                {{ __('Create Products') }}
-            </a>
+        <a href="{{ route('products.create') }}" class="btn btn-primary">
+            {{ __('Create Products') }}
+        </a>
         @endcan
     </div>
 
@@ -26,44 +36,44 @@
             </thead>
             <tbody>
                 @forelse($products as $product)
-                    <tr>
-                        <td>{{ $product->name }}</td>
-                        <td>{{ $product->price }}</td>
-                        <td>
-                            @if($product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-thumbnail" style="height: 40px; width: 40px; object-fit: cover;">
-                            @endif
-                        </td>
-                        <td>{{ $product->quantity }}</td>
-                        <td>{{ $product->description }}</td>
-                        <td>
-                            @if($product->status === 'Active')
-                                <span class="badge bg-success">{{ ucfirst($product->status) }}</span>
-                            @else
-                                <span class="badge bg-danger">{{ ucfirst($product->status) }}</span>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="d-flex gap-2">
-                                @can('Product Edit')
-                                    <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-primary">
-                                        {{ __('Edit') }}
-                                    </a>
-                                @endcan
-                                @can('Product Delete')
-                                    <button onclick="confirmDelete({{ $product['id'] }})" class="btn btn-sm btn-danger">
-                                        {{ __('Delete') }}
-                                    </button>
-                                @endcan
-                            </div>
-                        </td>
-                    </tr>
+                <tr>
+                    <td>{{ $product->name }}</td>
+                    <td>{{ $product->price }}</td>
+                    <td>
+                        @if($product->image)
+                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-thumbnail" style="height: 40px; width: 40px; object-fit: cover;">
+                        @endif
+                    </td>
+                    <td>{{ $product->quantity }}</td>
+                    <td>{{ $product->description }}</td>
+                    <td>
+                        @if($product->status === 'Active')
+                        <span class="badge bg-success">{{ ucfirst($product->status) }}</span>
+                        @else
+                        <span class="badge bg-danger">{{ ucfirst($product->status) }}</span>
+                        @endif
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            @can('Product Edit')
+                            <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-primary">
+                                {{ __('Edit') }}
+                            </a>
+                            @endcan
+                            @can('Product Delete')
+                            <button onclick="confirmDelete({{ $product['id'] }})" class="btn btn-sm btn-danger">
+                                {{ __('Delete') }}
+                            </button>
+                            @endcan
+                        </div>
+                    </td>
+                </tr>
                 @empty
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">
-                            {{ __('No products found.') }}
-                        </td>
-                    </tr>
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        {{ __('No products found.') }}
+                    </td>
+                </tr>
                 @endforelse
             </tbody>
         </table>
@@ -71,7 +81,7 @@
 </div>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#myCustomTable').DataTable();
     });
 

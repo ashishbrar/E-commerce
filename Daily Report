@@ -347,12 +347,10 @@ Steps:-
 2. if user are direct buy-now the product then user are direct to buy the product and increse the product quantity from the same page.
 
 
-Today's Task
+Today’s task
 Steps:-
-1. Fixed errors.
-2. I we update the cart page.
-3. Add in the cart page ajax functionlty.
-4. if user are increse the product quantity then this is increse the quantity with the ajax without refresh the page.
-
+- Create a pull request from the git hub.
+- fix issues.
+- Create new migrations.
 
 
