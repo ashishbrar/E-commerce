@@ -2,9 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
-use App\Livewire\Users\{UserIndex, UserCreate, UserEdit, UserShow};
-use App\Livewire\Products\{ProductIndex, ProductCreate, ProductEdit, ProductShow};
-use App\Livewire\Roles\{RolesIndex, RolesCreate, RolesEdit, RolesShow};
+use App\Livewire\Users\{UserIndex, UserCreate, UserEdit};
+use App\Livewire\Products\{ProductIndex, ProductCreate, ProductEdit};
+use App\Livewire\Roles\{RolesIndex, RolesCreate, RolesEdit};
 use App\Livewire\Category\{CategoryIndex, CategoryCreate, CategoryEdit};
 use App\Http\Controllers\{SwitchUserController,ProductController};
 use App\Http\Controllers\EditProfileController;

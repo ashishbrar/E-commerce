@@ -1,18 +1,17 @@
-<div class="container mt-4">
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+<div class="admin-page">
+    <div class="admin-card-header">
         <div>
-            <h1 class="h3">{{ __('Roles') }}</h1>
-            <p class="text-muted mb-0">{{ __('Manage all your users roles') }}</p>
+            <h3>{{ __('Roles') }}</h3>
+            <p>{{ __('Manage all your users roles') }}</p>
         </div>
         @can('Role Add')
-            <a href="{{ route('roles.create') }}" class="btn btn-primary">
-                {{ __('Create Role') }}
-            </a>
+            <a href="{{ route('roles.create') }}" class="btn btn-dark">{{ __('Create Role') }}</a>
         @endcan
     </div>
 
-    <div class="table-responsive mt-4">
-        <table id="rolesTable" class="table table-bordered table-hover align-middle">
+    <div class="admin-table-card">
+        <div class="table-responsive">
+            <table id="rolesTable" class="table admin-table align-middle">
             <thead class="table-light">
                 <tr>
                     <th scope="col">{{ __('Name') }}</th>

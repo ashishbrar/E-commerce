@@ -1,18 +1,17 @@
-<div class="container mt-4">
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+<div class="admin-page">
+    <div class="admin-card-header">
         <div>
-            <h1 class="h3">{{ __('Products') }}</h1>
-            <p class="text-muted mb-0">{{ __('Manage all your products') }}</p>
+            <h3>{{ __('Products') }}</h3>
+            <p>{{ __('Manage all your products with a cleaner responsive table') }}</p>
         </div>
         @can('Product Add')
-            <a href="{{ route('products.create') }}" class="btn btn-primary">
-                {{ __('Create Products') }}
-            </a>
+            <a href="{{ route('products.create') }}" class="btn btn-dark">{{ __('Create Product') }}</a>
         @endcan
     </div>
 
-    <div class="table-responsive mt-4">
-        <table id="myCustomTable" class="table table-bordered table-hover align-middle">
+    <div class="admin-table-card">
+        <div class="table-responsive">
+            <table id="myCustomTable" class="table admin-table align-middle">
             <thead class="table-light">
                 <tr>
                     <th scope="col">Name</th>

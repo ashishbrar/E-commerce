@@ -1,16 +1,16 @@
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="admin-page">
+    <div class="admin-card-header">
         <div>
-            <h3 class="fw-bold mb-1">{{ __('Staff') }}</h3>
-            <div class="text-muted mb-2" style="font-size: 1.05rem;">{{ __('Manage all your staff members') }}</div>
+            <h3>{{ __('Staff') }}</h3>
+            <p>{{ __('Manage all your staff members') }}</p>
         </div>
         @can('Staff Add')
-            <a href="{{ route('staff.create') }}" class="btn btn-primary">Create Staff</a>
+            <a href="{{ route('staff.create') }}" class="btn btn-dark">Create Staff</a>
         @endcan
     </div>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="row mb-3">
+
+    <div class="admin-table-card">
+        <div class="row mb-3">
                 <div class="col-md-6 col-12 d-flex align-items-center gap-2">
                     <label for="entries" class="form-label mb-0">Show</label>
                     <select id="entries" class="form-select form-select-sm" style="width: auto; display: inline-block;">
@@ -25,8 +25,8 @@
                     <input type="search" class="form-control form-control-sm" placeholder="Search..." style="max-width: 220px;" id="staffSearch">
                 </div>
             </div>
-            <div class="table-responsive">
-                <table id="myCustomTable" class="table table-bordered table-hover align-middle mb-0">
+        <div class="table-responsive">
+                <table id="myCustomTable" class="table admin-table align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Name</th>
@@ -75,8 +75,8 @@
                         @endforelse
                     </tbody>
                 </table>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-3">
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3">
                 <div>
                     Showing 1 to {{ count($staff) }} of {{ count($staff) }} entries
                 </div>
@@ -87,8 +87,6 @@
                         <li class="page-item disabled"><span class="page-link">Next</span></li>
                     </ul>
                 </nav>
-            </div>
-        </div>
     </div>
 </div>
 <script>

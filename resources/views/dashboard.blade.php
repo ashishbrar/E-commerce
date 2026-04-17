@@ -1,38 +1,46 @@
 <x-layouts.app :title="__('Dashboard')">
-    <div class="container-fluid py-4">
+    <div class="admin-page">
+        <section class="admin-hero-panel">
+            <div>
+                <span class="section-badge">Overview</span>
+                <h2>Monitor your ecommerce operations from one place.</h2>
+                <p>Users, products, and platform access are now presented in a cleaner dashboard designed for faster management.</p>
+            </div>
+        </section>
+
         <div class="row g-4 mb-4">
             <div class="col-12 col-sm-6 col-md-4">
-                <div class="card border-top border-3 border-primary shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="card-text text-muted mb-1">Total Users</p>
-                        <h4 class="card-title fw-semibold mb-0">{{ $totalUsers }}</h4>
-                    </div>
+                <div class="admin-stat-card">
+                    <span>Total Users</span>
+                    <h3>{{ $totalUsers }}</h3>
+                    <p>Registered accounts in the platform</p>
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-4">
-                <div class="card border-top border-3 border-success shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="card-text text-muted mb-1">Total Products</p>
-                        <h4 class="card-title fw-semibold mb-0">{{ $totalProducts }}</h4>
-                    </div>
+                <div class="admin-stat-card success">
+                    <span>Total Products</span>
+                    <h3>{{ $totalProducts }}</h3>
+                    <p>Catalog entries ready for storefront display</p>
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-4">
-                <div class="card border-top border-3 border-primary shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="card-text text-muted mb-1">Total Services</p>
-                        <h4 class="card-title fw-semibold mb-0">12</h4>
-                    </div>
+                <div class="admin-stat-card accent">
+                    <span>Responsive Panels</span>
+                    <h3>All Core</h3>
+                    <p>Frontend and admin layouts updated for mobile and desktop</p>
                 </div>
             </div>
         </div>
 
-        <div class="card border shadow-sm mx-auto w-100" style="max-width: 1100px;">
-            <div class="card-body">
-                <h4 class="card-title text-center mb-4">Users Information</h4>
-                <hr>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle mb-0">
+        <section class="admin-table-card">
+            <div class="admin-card-header">
+                <div>
+                    <h3>Users Information</h3>
+                    <p>Quick view of team access and assigned roles.</p>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table admin-table align-middle mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th scope="col">ID</th>
@@ -64,8 +72,7 @@
                             @endforelse
                         </tbody>
                     </table>
-                </div>
             </div>
-        </div>
+        </section>
     </div>
 </x-layouts.app>

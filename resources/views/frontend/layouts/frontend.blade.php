@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <title>Frontend Site</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-    
+    @include('partials.head', ['title' => $title ?? 'Ace Ecommerce'])
 </head>
-<body>
+<body class="frontend-body">
     @include('frontend.partials.header')
 
-    <main>
+    <main class="frontend-shell">
         @yield('content')
     </main>
 
     @include('frontend.partials.footer')
+    @livewireScripts
 </body>
 </html>

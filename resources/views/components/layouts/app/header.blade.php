@@ -1,25 +1,30 @@
-@include('partials.head')
 @auth
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom px-4 py-2">
-    <div class="container-fluid">
+<header class="admin-topbar">
+    <div class="admin-topbar-inner">
+        <div class="admin-topbar-left">
+            <button class="admin-hamburger d-lg-none" type="button" data-sidebar-toggle aria-label="Open navigation">
+                <i class="bi bi-list"></i>
+            </button>
+            <div>
+                <span class="admin-page-eyebrow">Admin Workspace</span>
+                <h1 class="admin-page-title">{{ $title ?? 'Dashboard' }}</h1>
+            </div>
+        </div>
         <div class="ms-auto">
             <div class="dropdown">
-                <button
-                    class="btn dropdown-toggle d-flex align-items-center"
-                    type="button"
-                    id="userDropdown"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                >
-                    <span class="rounded-circle bg-secondary text-white text-center me-2" style="width: 32px; height: 32px; line-height: 32px; font-weight: bold;">
+                <button class="admin-user-toggle dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="admin-avatar">
                         {{ auth()->user()->initials() }}
                     </span>
-                    <span class="d-none d-xl-inline">{{ auth()->user()->name }}</span>
+                    <span class="admin-user-copy d-none d-md-flex">
+                        <strong>{{ auth()->user()->name }}</strong>
+                        <small>{{ auth()->user()->email }}</small>
+                    </span>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown" style="min-width:220px;">
+                <ul class="dropdown-menu dropdown-menu-end shadow admin-user-menu" aria-labelledby="userDropdown">
                     <li class="px-3 py-2">
                         <div class="d-flex align-items-center">
-                            <span class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-weight: bold;">
+                            <span class="admin-avatar me-2">
                                 {{ auth()->user()->initials() }}
                             </span>
                             <div>
@@ -53,5 +58,5 @@
             </div>
         </div>
     </div>
-</nav>
+</header>
 @endauth
