@@ -6,10 +6,14 @@ use App\Livewire\Users\{UserIndex, UserCreate, UserEdit, UserShow};
 use App\Livewire\Products\{ProductIndex, ProductCreate, ProductEdit, ProductShow};
 use App\Livewire\Roles\{RolesIndex, RolesCreate, RolesEdit, RolesShow};
 use App\Livewire\Category\{CategoryIndex, CategoryCreate, CategoryEdit};
-use App\Http\Controllers\{SwitchUserController,ProductController};
+use App\Http\Controllers\{SwitchUserController,ProductController, StripeController};
 use App\Http\Controllers\EditProfileController;
 use App\Livewire\Staff\{StaffCreate, StaffEdit};
 use App\Livewire\Staff\StaffIndex;
+use App\Livewire\Settings\SettingsIndex;
+use App\Livewire\Settings\EmailTemplatesIndex;
+use App\Livewire\Settings\EmailTemplateEdit;
+use App\Http\Controllers\EmailController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\BuyNowController;
@@ -25,6 +29,7 @@ use App\Http\Controllers\ShopController;
 // })
 
 Route::get('/', [ProductController::class, 'frontend'])->name('home');
+Route::get('/flash-test', fn () => redirect()->route('home')->with('success', 'Flash message test is working.'))->name('flash.test');
 Route::get('/dashboard',[SwitchUserController::class,'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('users', UserIndex::class)->name('users.index')->middleware("permission:User Show|User Add|User Edit|User Delete");
@@ -46,6 +51,15 @@ Route::get('category/{id}/edit', CategoryEdit::class)->name('category.edit')->mi
 Route::get('staff', StaffIndex::class)->name('staff.index');
 Route::get('staff/create', StaffCreate::class)->name('staff.create');
 Route::get('staff/{id}/edit', StaffEdit::class)->name('staff.edit');
+
+Route::get('settings', SettingsIndex::class)->name('settings.index')->middleware(['auth', 'verified']);
+Route::get('settings/email-templates', EmailTemplatesIndex::class)->name('settings.email-templates')->middleware(['auth', 'verified']);
+Route::get('settings/email-templates/{id}/edit', EmailTemplateEdit::class)->name('settings.email-templates.edit')->middleware(['auth', 'verified']);
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('admin/email/resend-order/{orderId}', [EmailController::class, 'resendOrderSuccess'])->name('email.resend.order');
+    Route::post('admin/email/test', [EmailController::class, 'sendTest'])->name('email.test');
+});
 
 Route::middleware(['auth'])->group(function () {
 Route::post('/admin/switch-user/{user}', [SwitchUserController::class, 'switchTo'])->name('admin.switchUser');
@@ -74,7 +88,11 @@ Route::get('/buy-now/checkout', [BuyNowController::class, 'checkout'])->name('bu
 Route::post('/buy-now/place-order', [BuyNowController::class, 'placeOrder'])->name('buy.now.placeOrder');
 });
 
-Route::get('/paypal/payment', [PayPalController::class, 'payWithPayPal'])->name('paypal.payment');
+Route::post('/stripe/checkout', [StripeController::class, 'checkout'])->name('stripe.checkout');
+Route::get('/stripe/success', [StripeController::class, 'success'])->name('stripe.success');
+Route::get('/stripe/cancel', [StripeController::class, 'cancel'])->name('stripe.cancel');
+
+Route::post('/paypal/checkout', [PayPalController::class, 'payWithPayPal'])->name('paypal.checkout');
 Route::get('/paypal/success', [PayPalController::class, 'paymentSuccess'])->name('paypal.success');
 Route::get('/paypal/cancel', [PayPalController::class, 'paymentCancel'])->name('paypal.cancel');
 

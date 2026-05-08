@@ -10,11 +10,10 @@ class ShopController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = Category::all();
-        $query = Product::query()->with('category');
-        
-        $categories = Category::all();
-        $query = Product::query()->with('category');
+        $categories = Category::where('status', 'Active')->latest()->get();
+        $query = Product::query()
+            ->with('category')
+            ->where('status', 'Active');
 
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
@@ -25,7 +24,7 @@ class ShopController extends Controller
         } elseif ($request->sort == 'high_low') {
             $query->orderByDesc('price');
         }
-        $products = $query->paginate(12);
+        $products = $query->latest()->paginate(12)->withQueryString();
 
         return view('shop.shop', compact('products', 'categories'));
     }

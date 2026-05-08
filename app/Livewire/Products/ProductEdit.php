@@ -47,7 +47,7 @@ class ProductEdit extends Component
             'image' => 'nullable|image|max:1024',
             'gallery_temp.*' => 'nullable|image|max:2048',
             'status' => 'required|in:Active,Inactive',
-            'quantity' => 'required',
+            'quantity' => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,id',
         ]);
 

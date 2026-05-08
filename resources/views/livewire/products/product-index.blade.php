@@ -1,88 +1,98 @@
-<div class="container mt-4">
-    <div class="d-flex justify-content-end mb-4">
-        <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="paypalModeSwitch">
-            <label class="form-check-label fw-semibold ms-2" for="paypalModeSwitch">
-                Switch to Live PayPal Mode
-            </label>
-        </div>
-    </div>
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+<div class="admin-page">
+    <div class="admin-page-head">
         <div>
-            <h1 class="h3">{{ __('Products') }}</h1>
-            <p class="text-muted mb-0">{{ __('Manage all your products') }}</p>
+            <h2 class="admin-page-title">{{ __('Products') }}</h2>
+            <p class="admin-page-subtitle">{{ __('Manage catalog items, stock, images, and publishing status.') }}</p>
         </div>
-
 
         @can('Product Add')
-        <a href="{{ route('products.create') }}" class="btn btn-primary">
-            {{ __('Create Products') }}
-        </a>
+            <a href="{{ route('products.create') }}" class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-plus-lg"></i>
+                {{ __('Create Product') }}
+            </a>
         @endcan
     </div>
 
-    <div class="table-responsive mt-4">
-        <table id="myCustomTable" class="table table-bordered table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Price</th>
-                    <th scope="col">Image</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Description</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($products as $product)
-                <tr>
-                    <td>{{ $product->name }}</td>
-                    <td>{{ $product->price }}</td>
-                    <td>
-                        @if($product->image)
-                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-thumbnail" style="height: 40px; width: 40px; object-fit: cover;">
-                        @endif
-                    </td>
-                    <td>{{ $product->quantity }}</td>
-                    <td>{{ $product->description }}</td>
-                    <td>
-                        @if($product->status === 'Active')
-                        <span class="badge bg-success">{{ ucfirst($product->status) }}</span>
-                        @else
-                        <span class="badge bg-danger">{{ ucfirst($product->status) }}</span>
-                        @endif
-                    </td>
-                    <td>
-                        <div class="d-flex gap-2">
-                            @can('Product Edit')
-                            <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-primary">
-                                {{ __('Edit') }}
-                            </a>
-                            @endcan
-                            @can('Product Delete')
-                            <button onclick="confirmDelete({{ $product['id'] }})" class="btn btn-sm btn-danger">
-                                {{ __('Delete') }}
-                            </button>
-                            @endcan
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="text-center text-muted">
-                        {{ __('No products found.') }}
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h3 class="admin-card-title">{{ __('Product List') }}</h3>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="paypalModeSwitch">
+                <label class="form-check-label fw-semibold small" for="paypalModeSwitch">
+                    Live PayPal Mode
+                </label>
+            </div>
+        </div>
+
+        <div class="admin-card-body">
+            <div class="admin-table-wrap">
+                <table id="productsTable" class="table table-hover align-middle admin-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">{{ __('Name') }}</th>
+                            <th scope="col">{{ __('Price') }}</th>
+                            <th scope="col">{{ __('Image') }}</th>
+                            <th scope="col">{{ __('Quantity') }}</th>
+                            <th scope="col">{{ __('Description') }}</th>
+                            <th scope="col">{{ __('Status') }}</th>
+                            <th scope="col">{{ __('Action') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($products as $product)
+                            <tr>
+                                <td class="fw-semibold">{{ $product->name }}</td>
+                                <td>{{ $product->price }}</td>
+                                <td>
+                                    @if($product->image)
+                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="admin-thumb">
+                                    @else
+                                        <span class="text-muted small">No image</span>
+                                    @endif
+                                </td>
+                                <td>{{ $product->quantity }}</td>
+                                <td class="text-muted">{{ \Illuminate\Support\Str::limit($product->description, 70) }}</td>
+                                <td>
+                                    @if($product->status === 'Active')
+                                        <span class="badge text-bg-success">{{ ucfirst($product->status) }}</span>
+                                    @else
+                                        <span class="badge text-bg-danger">{{ ucfirst($product->status) }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="admin-actions">
+                                        @can('Product Edit')
+                                            <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil-square"></i>
+                                                {{ __('Edit') }}
+                                            </a>
+                                        @endcan
+                                        @can('Product Delete')
+                                            <button onclick="confirmDelete({{ $product['id'] }})" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                                {{ __('Delete') }}
+                                            </button>
+                                        @endcan
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-5">
+                                    {{ __('No products found.') }}
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     $(document).ready(function() {
-        $('#myCustomTable').DataTable();
+        $('#productsTable').DataTable();
     });
 
     function confirmDelete(productId) {
@@ -91,7 +101,7 @@
             text: "You are about to delete this product.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#e3342f',
+            confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
@@ -101,12 +111,12 @@
         });
     }
 
-    document.addEventListener('livewire:userDeleted', (event) => {
+    document.addEventListener('livewire:productDeleted', (event) => {
         Swal.fire({
             toast: true,
             position: 'top-end',
             icon: 'success',
-            title: event.detail + ' deleted successfully',
+            title: event.detail.productName + ' deleted successfully',
             showConfirmButton: false,
             timer: 3000
         });

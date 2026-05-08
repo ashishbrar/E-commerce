@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Cart;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class BuyNowController extends Controller
 {
@@ -50,6 +51,18 @@ class BuyNowController extends Controller
             return redirect()->route('cart.index')->with('warning', 'No items selected');
         }
 
+        $quantities = [];
+        foreach ($products as $product) {
+            $cartItem = $cart->firstWhere('product_id', $product->id);
+            $quantities[$product->id] = $cartItem ? $cartItem->quantity : 1;
+        }
+
+        $stockMessage = $this->validateStock($products, $quantities);
+
+        if ($stockMessage) {
+            return redirect()->route('cart.index')->with('warning', $stockMessage);
+        }
+
         return view('checkout.buy_now', compact('products', 'cart'));
     }
 
@@ -70,43 +83,63 @@ class BuyNowController extends Controller
             $productIds = [$productIds];
         }
 
-        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
-
-        $total = 0;
+        $quantities = [];
         foreach ($productIds as $id) {
-            $product = $products->get($id);
-            if (! $product) continue;
             $quantity = intval($request->input("quantity.{$id}", 1));
-            if ($quantity < 1) $quantity = 1;
-            $total += $product->price * $quantity;
+            $quantities[$id] = max($quantity, 1);
         }
 
-        $order = Order::create([
-            'user_id'        => Auth::id(),
-            'total'          => $total,
-            'address'        => $request->address,
-            'status'         => 'complete',
-            'full_name'      => $request->full_name,
-            'email'          => $request->email,
-            'phone'          => $request->phone,
-            'city'           => $request->city,
-            'postal_code'    => $request->postal_code,
-            'payment_method' => $request->payment_method,
-        ]);
+        try {
+            $order = DB::transaction(function () use ($productIds, $quantities, $request) {
+                $products = Product::whereIn('id', $productIds)
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
 
-        foreach ($productIds as $id) {
-            $product = $products->get($id);
-            if (! $product) continue;
-            $quantity = intval($request->input("quantity.{$id}", 1));
-            if ($quantity < 1) $quantity = 1;
+                $stockMessage = $this->validateStock($products, $quantities);
 
-            OrderItem::create([
-                'order_id'   => $order->id,
-                'product_id' => $product->id,
-                'quantity'   => $quantity,
-                'price'      => $product->price * $quantity,
-                'address'    => $request->address,
-            ]);
+                if ($stockMessage) {
+                    throw new \RuntimeException($stockMessage);
+                }
+
+                $total = 0;
+                foreach ($productIds as $id) {
+                    $product = $products->get($id);
+                    $total += $product->price * ($quantities[$id] ?? 1);
+                }
+
+                $order = Order::create([
+                    'user_id'        => Auth::id(),
+                    'total'          => $total,
+                    'address'        => $request->address,
+                    'status'         => 'complete',
+                    'full_name'      => $request->full_name,
+                    'email'          => $request->email,
+                    'phone'          => $request->phone,
+                    'city'           => $request->city,
+                    'postal_code'    => $request->postal_code,
+                    'payment_method' => $request->payment_method,
+                ]);
+
+                foreach ($productIds as $id) {
+                    $product = $products->get($id);
+                    $quantity = $quantities[$id] ?? 1;
+
+                    OrderItem::create([
+                        'order_id'   => $order->id,
+                        'product_id' => $product->id,
+                        'quantity'   => $quantity,
+                        'price'      => $product->price * $quantity,
+                        'address'    => $request->address,
+                    ]);
+
+                    $product->decrement('quantity', $quantity);
+                }
+
+                return $order;
+            });
+        } catch (\RuntimeException $exception) {
+            return back()->withInput()->with('warning', $exception->getMessage());
         }
 
         if (Auth::check()) {
@@ -115,6 +148,31 @@ class BuyNowController extends Controller
                 ->delete();
         }
 
+        $emailer = app(EmailController::class);
+        $emailer->sendOrderPlaced($order);
+        $emailer->sendOrderSuccess($order);
+
         return redirect()->route('home')->with('success', 'Order placed successfully!');
+    }
+
+    private function validateStock(iterable $products, array $quantities): ?string
+    {
+        foreach ($products as $product) {
+            if (! $product instanceof Product) {
+                continue;
+            }
+
+            $quantity = max((int) ($quantities[$product->id] ?? 1), 1);
+
+            if ((int) $product->quantity < 1) {
+                return "{$product->name} is out of stock.";
+            }
+
+            if ((int) $product->quantity < $quantity) {
+                return "Only {$product->quantity} item(s) available for {$product->name}.";
+            }
+        }
+
+        return null;
     }
 }

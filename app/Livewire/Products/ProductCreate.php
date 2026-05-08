@@ -25,7 +25,7 @@ class ProductCreate extends Component
             'price' => 'required|numeric|min:0',
             'image' => 'required|image|max:1024', 
             'gallery_temp.*' => 'image|max:2048',
-            'quantity' => 'required',
+            'quantity' => 'required|integer|min:0',
             'status' => 'required|in:Active,Inactive',
             'category_id' => 'required|exists:categories,id',
         ]);

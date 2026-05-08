@@ -23,6 +23,12 @@ class UsersSeeder extends Seeder
                 'password' => bcrypt('admin@gmail.com'),
             ]
         );
+        $adminUser->forceFill([
+            'name' => 'Admin',
+            'is_admin' => 1,
+            'role' => 'Admin',
+            'status' => 'Active',
+        ])->save();
         $adminUser->assignRole('Admin');
 
         $customerUser = User::firstOrCreate(

@@ -58,11 +58,19 @@ class WishlistController extends Controller
 
         $product = Product::findOrFail($productId);
 
+        if ((int) $product->quantity < 1) {
+            return redirect()->back()->with('warning', 'This product is out of stock.');
+        }
+
         $cartItem = Cart::where('user_id', $user->id)
             ->where('product_id', $productId)
             ->first();
 
         if ($cartItem) {
+            if ((int) $cartItem->quantity >= (int) $product->quantity) {
+                return redirect()->back()->with('warning', "Only {$product->quantity} item(s) available for {$product->name}.");
+            }
+
             $cartItem->increment('quantity');
         } else {
             Cart::create([

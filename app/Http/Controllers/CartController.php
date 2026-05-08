@@ -13,9 +13,36 @@ class CartController extends Controller
     {
         $user = Auth::user();
 
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Please log in first.');
+        }
+
         $cartItems = Cart::with('product')
             ->where('user_id', $user->id)
             ->get();
+
+        $cartAdjusted = false;
+
+        foreach ($cartItems as $cartItem) {
+            if (! $cartItem->product || (int) $cartItem->product->quantity < 1) {
+                $cartItem->delete();
+                $cartAdjusted = true;
+                continue;
+            }
+
+            if ((int) $cartItem->quantity > (int) $cartItem->product->quantity) {
+                $cartItem->update(['quantity' => (int) $cartItem->product->quantity]);
+                $cartAdjusted = true;
+            }
+        }
+
+        if ($cartAdjusted) {
+            session()->flash('warning', 'Some cart items were updated because stock changed.');
+
+            $cartItems = Cart::with('product')
+                ->where('user_id', $user->id)
+                ->get();
+        }
 
         $total = $cartItems->sum(function ($item) {
             return optional($item->product)->price * $item->quantity;
@@ -29,13 +56,21 @@ class CartController extends Controller
         $user = Auth::user();
         $product = Product::findOrFail($id);
 
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Please log in first.');
+        }
+
+        if ((int) $product->quantity < 1) {
+            return back()->with('warning', 'This product is out of stock.');
+        }
+
         $cartItem = Cart::where('user_id', $user->id)
             ->where('product_id', $product->id)
             ->first();
 
         if ($cartItem) {
-            if ($cartItem->quantity >= $product->quantity) {
-                return back()->with('warning', 'Not enough stock available');
+            if ((int) $cartItem->quantity >= (int) $product->quantity) {
+                return back()->with('warning', "Only {$product->quantity} item(s) available for {$product->name}.");
             }
 
             $cartItem->increment('quantity');
@@ -53,7 +88,7 @@ class CartController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'quantity' => 'required|integer|min:0',
+            'quantity' => 'required|integer|min:1',
         ]);
 
         $user = Auth::user();
@@ -65,29 +100,35 @@ class CartController extends Controller
 
         $quantity = (int) $request->quantity;
 
-        if ($quantity > $product->quantity) {
-            return response()->json(['error' => 'Requested quantity exceeds available stock.'], 400);
+        if ((int) $product->quantity < 1) {
+            return response()->json(['error' => "{$product->name} is out of stock."], 400);
+        }
+
+        if ((int) $product->quantity < $quantity) {
+            return response()->json(['error' => "Only {$product->quantity} item(s) available for {$product->name}."], 400);
         }
 
         $cartItem = Cart::where('user_id', $user->id)
             ->where('product_id', $id)
             ->first();
 
-        if ($quantity == 0) {
-            $cartItem->delete();
-        } else {
-            $cartItem->update(['quantity' => $quantity]);
+        if (!$cartItem) {
+            return response()->json(['error' => 'Cart item not found.'], 404);
         }
+
+        $cartItem->update(['quantity' => $quantity]);
 
         $cartTotal = Cart::with('product')
             ->where('user_id', $user->id)
             ->get()
             ->sum(fn($item) => optional($item->product)->price * $item->quantity);
+        $cartCount = Cart::where('user_id', $user->id)->sum('quantity');
 
         return response()->json([
             'success' => true,
             'message' => 'Cart updated successfully.',
             'cart_total' => $cartTotal,
+            'cart_count' => $cartCount,
         ]);
     }
 
@@ -95,9 +136,17 @@ class CartController extends Controller
     {
         $user = Auth::user();
 
+        if (!$user) {
+            return response()->json(['error' => 'Please log in first.'], 401);
+        }
+
         $cartItem = Cart::where('user_id', $user->id)
             ->where('product_id', $id)
             ->first();
+
+        if (!$cartItem) {
+            return response()->json(['error' => 'Cart item not found.'], 404);
+        }
 
         $cartItem->delete();
 
@@ -105,11 +154,13 @@ class CartController extends Controller
             ->where('user_id', $user->id)
             ->get()
             ->sum(fn($item) => optional($item->product)->price * $item->quantity);
+        $cartCount = Cart::where('user_id', $user->id)->sum('quantity');
 
         return response()->json([
             'success' => true,
             'message' => 'Product removed successfully.',
             'cart_total' => $cartTotal,
+            'cart_count' => $cartCount,
         ]);
     }
 }

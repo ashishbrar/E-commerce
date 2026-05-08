@@ -1,93 +1,284 @@
-<header>
-    <nav class="navbar navbar-expand-lg bg-transparent fixed-top">
-        <div class="container-fluid d-flex align-items-center">
-            <a class="navbar-brand fw-bold fs-4 text-primary" href="{{ route('home') }}">E-commerce</a>
+@php
+    $cartCount = 0;
+    $wishlistCount = 0;
 
-            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 d-flex flex-row gap-3">
-                 <li class="nav-item">
-                    <a class="btn fw-semibold text-dark text-uppercase" href="{{ route('home') }}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn fw-semibold text-dark text-uppercase" href="{{ route('shop.shop') }}">Shop</a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn fw-semibold text-dark text-uppercase" href="#">About</a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn fw-semibold text-dark text-uppercase" href="#">Services</a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn fw-semibold text-dark text-uppercase" href="#">Contact Us</a>
-                </li>
-            </ul>
+    if (auth()->check()) {
+        $cartCount = \App\Models\Cart::where('user_id', auth()->id())->sum('quantity');
+        $wishlistCount = \App\Models\Wishlist::where('user_id', auth()->id())->count();
+    }
+@endphp
 
-            <ul class="nav ms-auto d-flex align-items-center gap-3">
-                <li class="nav-item position-relative">
-                    <a class="btn fw-semibold text-dark text-uppercase d-flex align-items-center gap-2 position-relative" href="{{ route('cart.index') }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#333" viewBox="0 0 24 24">
-                            <path d="M7 4h-2l-1 2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2h-11.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h6.72c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.3.12-.47 0-.55-.45-1-1-1h-16zm-1 18c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm14 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-                        </svg>
-                        @php
-                            $cartCount = 0;
-                            if(auth()->check()) {
-                                $cartCount = \App\Models\Cart::where('user_id', auth()->id())->sum('quantity');
-                            }
-                        @endphp
-                        @if($cartCount > 0)
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                {{ $cartCount }}
-                                <span class="visually-hidden">items in cart</span>
-                            </span>
-                        @endif
+<header class="store-header sticky-top">
+    <div class="store-topbar">
+        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span>Free shipping on prepaid orders over ₹999</span>
+            <div class="d-flex align-items-center gap-3">
+                <span><i class="bi bi-shield-check me-1"></i>Secure checkout</span>
+                <span><i class="bi bi-arrow-repeat me-1"></i>Easy returns</span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg bg-white">
+        <div class="container">
+            <a class="navbar-brand store-brand" href="{{ route('home') }}">
+                <span class="store-brand-mark">A</span>
+                <span>Ace<span>Store</span></span>
+            </a>
+
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav mx-auto mb-3 mb-lg-0 gap-lg-1">
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('shop.shop') ? 'active' : '' }}" href="{{ route('shop.shop') }}">Shop</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('home') }}#categories">Categories</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('home') }}#products">New Arrivals</a></li>
+                </ul>
+
+                <div class="store-actions">
+                    <a href="{{ route('shop.shop') }}" class="store-search d-none d-xl-flex">
+                        <i class="bi bi-search"></i>
+                        <span>Search products</span>
                     </a>
-                </li>
 
-                <li class="nav-item position-relative">
-                    <a class="btn fw-semibold text-dark text-uppercase d-flex align-items-center position-relative" href="{{ route('wishlist.index') }}">
-                        @php
-                            $wishlistCount = auth()->check() ? \App\Models\Wishlist::where('user_id', auth()->id())->count() : 0;
-                        @endphp
-                        @if($wishlistCount > 0)
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#e74c3c" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-heart" viewBox="0 0 24 24">
-                                <path d="M20.8 4.6c-1.5-1.4-3.9-1.4-5.4 0l-.4.4-.4-.4c-1.5-1.4-3.9-1.4-5.4 0-1.6 1.5-1.6 4 0 5.5l5.8 5.7 5.8-5.7c1.6-1.5 1.6-4 0-5.5z"/>
-                            </svg>
-                        @endif
-                        @if($wishlistCount > 0)
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                {{ $wishlistCount }}
-                            </span>
-                        @endif
+                    <a href="{{ route('wishlist.index') }}" class="store-icon-btn" aria-label="Wishlist">
+                        <i class="bi bi-heart"></i>
+                        <span class="store-count bg-danger" data-header-wishlist-count>{{ $wishlistCount }}</span>
                     </a>
-                </li>
-            </ul>
 
-            @if (Route::has('login'))
-                <div class="d-flex align-items-center gap-3 ms-3">
+                    <a href="{{ route('cart.index') }}" class="store-icon-btn" aria-label="Cart">
+                        <i class="bi bi-bag"></i>
+                        <span class="store-count bg-primary" data-header-cart-count>{{ $cartCount }}</span>
+                    </a>
+
                     @auth
                         <div class="dropdown">
-                            <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><img src="{{ Auth::user()->profile_photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) }}" alt="Profile" width="32" height="32" class="rounded-circle"></a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                <li><a class="dropdown-item" href="{{ route('dashboard') }}">Dashboard</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ route('profile.edit') }}">Profile</a></li>
+                            <a href="#" class="store-user dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="{{ Auth::user()->profile_photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=111827&color=fff' }}" alt="{{ Auth::user()->name }}">
+                                <span class="d-none d-sm-inline">{{ Str::limit(Auth::user()->name, 10) }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
+                                <li><a class="dropdown-item py-2" href="{{ route('dashboard') }}">Dashboard</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="dropdown-item">Log Out</button>
+                                        <button type="submit" class="dropdown-item text-danger py-2 fw-bold">Log Out</button>
                                     </form>
                                 </li>
                             </ul>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="btn btn-success fw-bold text-uppercase">Log in</a>
+                        <a href="{{ route('login') }}" class="btn btn-dark px-4">Log in</a>
                     @endauth
                 </div>
-            @endif
+            </div>
         </div>
     </nav>
 </header>
+
+<style>
+    .store-header {
+        box-shadow: 0 1px 0 rgba(15, 23, 42, .08);
+        z-index: 1030;
+    }
+
+    .store-topbar {
+        background: #0f172a;
+        color: rgba(255, 255, 255, .82);
+        font-size: 13px;
+        font-weight: 650;
+        padding: 8px 0;
+    }
+
+    .store-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: #111827;
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: 0;
+    }
+
+    .store-brand:hover {
+        color: #111827;
+    }
+
+    .store-brand span span {
+        color: #2563eb;
+    }
+
+    .store-brand-mark {
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: #111827;
+        color: #fff;
+        font-size: 18px;
+    }
+
+    .navbar {
+        padding: 14px 0;
+    }
+
+    .navbar .nav-link {
+        color: #334155;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 800;
+        padding: 10px 14px;
+    }
+
+    .navbar .nav-link:hover,
+    .navbar .nav-link.active {
+        background: #f1f5f9;
+        color: #111827;
+    }
+
+    .store-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .store-search {
+        min-width: 190px;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 10px 14px;
+        text-decoration: none;
+    }
+
+    .store-search:hover,
+    .store-icon-btn:hover,
+    .store-user:hover {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+        color: #111827;
+    }
+
+    .store-icon-btn,
+    .store-user {
+        position: relative;
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        background: #fff;
+        color: #111827;
+        text-decoration: none;
+    }
+
+    .store-icon-btn i {
+        font-size: 19px;
+    }
+
+    .store-count {
+        position: absolute;
+        top: -6px;
+        right: -5px;
+        min-width: 19px;
+        height: 19px;
+        display: inline-grid;
+        place-items: center;
+        border: 2px solid #fff;
+        border-radius: 999px;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 850;
+        line-height: 1;
+    }
+
+    .store-user {
+        width: auto;
+        gap: 8px;
+        padding: 4px 10px 4px 4px;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .store-user img {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    @media (max-width: 991px) {
+        .navbar {
+            padding: 10px 0;
+        }
+
+        .navbar-collapse {
+            border-top: 1px solid #e5e7eb;
+            margin-top: 12px;
+            padding-top: 12px;
+        }
+
+        .navbar .nav-link {
+            padding: 11px 12px;
+        }
+
+        .store-actions {
+            align-items: center;
+            flex-wrap: wrap;
+            padding-top: 12px;
+        }
+
+        .store-topbar .container {
+            justify-content: center !important;
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 575px) {
+        .store-topbar {
+            font-size: 12px;
+        }
+
+        .store-topbar .container > div {
+            width: 100%;
+            justify-content: center;
+            gap: 12px !important;
+        }
+
+        .store-brand {
+            font-size: 20px;
+        }
+
+        .store-brand-mark {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+
+        .store-actions {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(42px, auto));
+            justify-content: start;
+        }
+
+        .store-actions .btn {
+            grid-column: 1 / -1;
+            width: 100%;
+        }
+    }
+</style>

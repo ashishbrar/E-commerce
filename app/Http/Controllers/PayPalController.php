@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Cart;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\PaypalCredential;
 
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
@@ -37,12 +38,20 @@ class PayPalController extends Controller
 
         $items = [];
         $total = 0.0;
+        $quantities = [];
 
         foreach ($productIds as $id) {
             $product = $products->get($id);
             if (! $product) continue;
             $qty = intval($request->input("quantity.{$id}", 1));
             if ($qty < 1) $qty = 1;
+            $quantities[$id] = $qty;
+
+            $stockMessage = $this->validateStock([$product], [$product->id => $qty]);
+
+            if ($stockMessage) {
+                return back()->withInput()->with('warning', $stockMessage);
+            }
 
             $items[] = [
                 'name' => substr($product->name, 0, 127),
@@ -60,24 +69,30 @@ class PayPalController extends Controller
 
         $settings = PaypalCredential::first();
 
+        if (! $settings || ! $settings->client_id || ! $settings->client_secret) {
+            return back()->withInput()->with('error', 'PayPal configuration missing!');
+        }
+
         $provider = new PayPalClient;
 
+        $mode = $settings->paypal_method === 'live' ? 'live' : 'sandbox';
+
         $provider->setApiCredentials([
-            'mode' => $settings->sandbox == 1 ? 'sandbox' : 'live',
+            'mode' => $mode,
             'payment_action' => 'Sale',  
             'currency' => 'USD',          
             'notify_url' => '', 
             'locale'          => 'en_US',
             'validate_ssl'    => true, 
             'sandbox' => [
-                'client_id'     => $settings->paypal_client_id,
-                'client_secret' => $settings->paypal_secret,
+                'client_id'     => $settings->client_id,
+                'client_secret' => $settings->client_secret,
                 'app_id'        => '',
             ],
         
             'live' => [
-                'client_id'     => $settings->paypal_client_id,
-                'client_secret' => $settings->paypal_secret,
+                'client_id'     => $settings->client_id,
+                'client_secret' => $settings->client_secret,
                 'app_id'        => '',
             ],
         ]);
@@ -133,43 +148,63 @@ class PayPalController extends Controller
                 $productIds = [$productIds];
             }
 
-            $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
-
-            $total = 0;
+            $quantities = [];
             foreach ($productIds as $id) {
-                $product = $products->get($id);
-                if (! $product) continue;
-                $qty = intval($request->input("quantity.{$id}", 1));
-                if ($qty < 1) $qty = 1;
-                $total += $product->price * $qty;
+                $quantities[$id] = $this->normalizeQuantity($request->input("quantity.{$id}", 1));
             }
 
-            $order = Order::create([
-                'user_id'        => Auth::id(),
-                'total'          => $total,
-                'address'        => $request->address,
-                'status'         => 'complete',
-                'full_name'      => $request->full_name,
-                'email'          => $request->email,
-                'phone'          => $request->phone,
-                'city'           => $request->city,
-                'postal_code'    => $request->postal_code,
-                'payment_method' => 'paypal',
-            ]);
+            try {
+                DB::transaction(function () use ($productIds, $quantities, $request) {
+                    $products = Product::whereIn('id', $productIds)
+                        ->lockForUpdate()
+                        ->get()
+                        ->keyBy('id');
 
-            foreach ($productIds as $id) {
-                $product = $products->get($id);
-                if (! $product) continue;
-                $qty = intval($request->input("quantity.{$id}", 1));
-                if ($qty < 1) $qty = 1;
+                    $stockMessage = $this->validateStock($products, $quantities);
 
-                OrderItem::create([
-                    'order_id'   => $order->id,
-                    'product_id' => $product->id,
-                    'quantity'   => $qty,
-                    'address'    => $request->address,
-                    'price'      => $product->price * $qty,
-                ]);
+                    if ($stockMessage) {
+                        throw new \RuntimeException($stockMessage);
+                    }
+
+                    $total = 0;
+                    foreach ($productIds as $id) {
+                        $product = $products->get($id);
+                        if (! $product) continue;
+                        $qty = $quantities[$id] ?? 1;
+                        $total += $product->price * $qty;
+                    }
+
+                    $order = Order::create([
+                        'user_id'        => Auth::id(),
+                        'total'          => $total,
+                        'address'        => $request->address,
+                        'status'         => 'complete',
+                        'full_name'      => $request->full_name,
+                        'email'          => $request->email,
+                        'phone'          => $request->phone,
+                        'city'           => $request->city,
+                        'postal_code'    => $request->postal_code,
+                        'payment_method' => 'paypal',
+                    ]);
+
+                    foreach ($productIds as $id) {
+                        $product = $products->get($id);
+                        if (! $product) continue;
+                        $qty = $quantities[$id] ?? 1;
+
+                        OrderItem::create([
+                            'order_id'   => $order->id,
+                            'product_id' => $product->id,
+                            'quantity'   => $qty,
+                            'address'    => $request->address,
+                            'price'      => $product->price * $qty,
+                        ]);
+
+                        $product->decrement('quantity', $qty);
+                    }
+                });
+            } catch (\RuntimeException $exception) {
+                return redirect()->route('home')->with('warning', $exception->getMessage());
             }
 
             if (Auth::check()) {
@@ -187,5 +222,31 @@ class PayPalController extends Controller
     public function paymentCancel()
     {
         return redirect()->route('home')->with('error', 'Payment was cancelled.');
+    }
+
+    private function normalizeQuantity(mixed $quantity): int
+    {
+        return max((int) $quantity, 1);
+    }
+
+    private function validateStock(iterable $products, array $quantities): ?string
+    {
+        foreach ($products as $product) {
+            if (! $product instanceof Product) {
+                continue;
+            }
+
+            $quantity = $this->normalizeQuantity($quantities[$product->id] ?? 1);
+
+            if ((int) $product->quantity < 1) {
+                return "{$product->name} is out of stock.";
+            }
+
+            if ((int) $product->quantity < $quantity) {
+                return "Only {$product->quantity} item(s) available for {$product->name}.";
+            }
+        }
+
+        return null;
     }
 }
